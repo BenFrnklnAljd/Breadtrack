@@ -107,7 +107,7 @@
         {{ exporting ? '⏳ Generating…' : 'Export PDF Report' }}
       </button>
       <button class="btn btn-ghost btn-block" @click="showReceiptModal = true">
-        🧾 View Digital Receipt
+        View Digital Receipt
       </button>
     </div>
 
