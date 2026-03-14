@@ -4,7 +4,7 @@
     <header class="top-bar">
       <div class="top-bar-left">
         <span class="top-bar-logo">🥐</span>
-        <span class="top-bar-title">PerishTrack</span>
+        <span class="top-bar-title">BreadTrack</span>
       </div>
       <div class="top-bar-right">
         <span class="top-bar-user">{{ auth.currentUser?.name }}</span>

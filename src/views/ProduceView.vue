@@ -36,14 +36,7 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="field-label">Notes (optional)</label>
-        <input
-          class="field-input"
-          v-model="form.notes"
-          placeholder="e.g. Morning batch, special order"
-        />
-      </div>
+      
 
       <div v-if="formError" class="form-error">{{ formError }}</div>
 
@@ -87,9 +80,10 @@
         <div v-if="entry.notes" class="prod-notes">{{ entry.notes }}</div>
 
         <div class="prod-footer">
-          <span :class="['tag', expiryTagClass(entry.date)]">
+          <span v-if="inv.isPerishable(entry.productId)" :class="['tag', expiryTagClass(entry.date)]">
             {{ expiryLabel(entry.date) }}
           </span>
+          <span v-else class="tag tag-bev">No Expiry</span>
           <div class="prod-actions">
             <button class="btn btn-ghost btn-xs" @click="startEdit(entry)">✏️ Edit</button>
             <button

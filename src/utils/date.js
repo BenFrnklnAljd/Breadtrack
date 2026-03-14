@@ -36,7 +36,7 @@ export const getExpiryStatus = (dateStr) => {
 
 export const expiryLabel = (dateStr) => {
   const status = getExpiryStatus(dateStr)
-  return { expired: 'Expired', expiring: 'Expiring', day2: 'Day 2', fresh: 'Fresh' }[status]
+  return { expired: 'Expired', expiring: 'Expiring', day2: '2 Days', fresh: 'Fresh' }[status]
 }
 
 export const expiryTagClass = (dateStr) => {

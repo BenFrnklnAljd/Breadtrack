@@ -15,6 +15,23 @@
       </button>
     </div>
 
+    <!-- Month Picker — only shown when Monthly is selected -->
+    <Transition name="fade">
+      <div v-if="period === 'monthly'" class="month-picker-wrap">
+        <div class="month-picker-label">
+          <span>📅 Select Month</span>
+          <span class="month-display">{{ selectedMonthLabel }}</span>
+        </div>
+        <input
+          class="field-input"
+          type="month"
+          v-model="selectedMonth"
+          :max="currentYearMonth"
+        />
+
+      </div>
+    </Transition>
+
     <!-- Product Filter -->
     <div class="form-group">
       <label class="field-label">Filter by Product</label>
@@ -22,6 +39,13 @@
         <option value="">All Products</option>
         <option v-for="p in inv.products" :key="p.id" :value="p.id">{{ p.name }}</option>
       </select>
+    </div>
+
+    <!-- Active period banner -->
+    <div class="period-banner">
+      <span class="period-banner-icon"></span>
+      <span class="period-banner-text">Showing: <strong>{{ activePeriodLabel }}</strong></span>
+      <span class="period-banner-count">{{ filteredSales.length }} sale{{ filteredSales.length !== 1 ? 's' : '' }}</span>
     </div>
 
     <!-- Summary Stats -->
@@ -51,7 +75,7 @@
     <div class="profit-row">
       <span class="profit-label">Profit / Loss Status</span>
       <span :class="['profit-badge', stats.net >= 0 ? 'pos' : 'neg']">
-        {{ stats.net >= 0 ? '📈 Profitable' : '📉 At a Loss' }}
+        {{ stats.net >= 0 ? 'Profitable' : 'At a Loss' }}
       </span>
     </div>
 
@@ -104,10 +128,10 @@
     <div class="section-heading">Export</div>
     <div class="export-grid">
       <button class="btn btn-primary btn-block" :disabled="exporting" @click="handleExportPDF">
-        {{ exporting ? '⏳ Generating…' : 'Export PDF Report' }}
+        {{ exporting ? '⏳ Generating…' : 'Export PDF ' + activePeriodLabel }}
       </button>
       <button class="btn btn-ghost btn-block" @click="showReceiptModal = true">
-        🧾 View Digital Receipt
+         View Today's Receipt
       </button>
     </div>
 
@@ -143,7 +167,7 @@ import { ref, computed } from 'vue'
 import { useInventoryStore } from '@/stores/inventory'
 import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
-import { todayLabel } from '@/utils/date'
+import { todayLabel, today } from '@/utils/date'
 import { usePdf } from '@/composables/usePdf'
 import StatCard from '@/components/ui/StatCard.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -153,19 +177,48 @@ const auth  = useAuthStore()
 const toast = useToastStore()
 const { exportReport } = usePdf()
 
-const period          = ref('daily')
-const productFilter   = ref('')
+const period           = ref('daily')
+const productFilter    = ref('')
 const showReceiptModal = ref(false)
-const exporting       = ref(false)
+const exporting        = ref(false)
+
+// Default selectedMonth to the current month in "YYYY-MM" format
+const currentYearMonth = today().slice(0, 7)
+const selectedMonth    = ref(currentYearMonth)
 
 const periods = [
   { value: 'daily',   label: 'Today'     },
   { value: 'weekly',  label: 'This Week' },
-  { value: 'monthly', label: 'This Month'},
+  { value: 'monthly', label: 'Monthly'   },
 ]
 
+
+const selectedMonthLabel = computed(() => {
+  if (!selectedMonth.value) return ''
+  const [yr, mo] = selectedMonth.value.split('-')
+  return new Date(parseInt(yr), parseInt(mo) - 1, 1)
+    .toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })
+})
+
+// What we pass to getFilteredSales
+const activeTargetMonth = computed(() =>
+  period.value === 'monthly' ? selectedMonth.value : null
+)
+
+// Label shown in the banner & export button
+const activePeriodLabel = computed(() => {
+  if (period.value === 'daily')   return 'Today'
+  if (period.value === 'weekly')  return 'This Week'
+  if (period.value === 'monthly') return selectedMonthLabel.value
+  return ''
+})
+
 const filteredSales = computed(() =>
-  inv.getFilteredSales({ period: period.value, productId: productFilter.value })
+  inv.getFilteredSales({
+    period:      period.value,
+    productId:   productFilter.value,
+    targetMonth: activeTargetMonth.value
+  })
 )
 
 const stats = computed(() => {
@@ -182,8 +235,8 @@ const salesByProduct = computed(() =>
 async function handleExportPDF() {
   exporting.value = true
   try {
-    await exportReport(period.value, productFilter.value)
-    toast.success('PDF report downloaded!')
+    await exportReport(period.value, productFilter.value, activeTargetMonth.value)
+    toast.success(`PDF for ${activePeriodLabel.value} downloaded!`)
   } catch (e) {
     toast.error('Export failed. Please try again.')
     console.error(e)
@@ -198,7 +251,7 @@ async function handleExportPDF() {
 .period-tabs {
   display: flex;
   gap: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 .period-btn {
   flex: 1;
@@ -218,6 +271,52 @@ async function handleExportPDF() {
   border-color: var(--accent);
   color: #0f0e0c;
   font-weight: 700;
+}
+
+/* Month Picker */
+.month-picker-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.month-picker-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text2);
+}
+.month-display {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+
+/* Period Banner */
+.period-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 9px 14px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+.period-banner-icon { font-size: 15px; }
+.period-banner-text { flex: 1; color: var(--text2); }
+.period-banner-count {
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
 }
 
 /* Profit row */

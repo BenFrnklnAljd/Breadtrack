@@ -3,7 +3,8 @@ import { useAuthStore } from '@/stores/auth'
 import { today, formatDate } from '@/utils/date'
 
 export function usePdf() {
-  async function exportReport(period, productId) {
+  // targetMonth: "YYYY-MM" string, only relevant when period === 'monthly'
+  async function exportReport(period, productId, targetMonth = null) {
     const { jsPDF } = await import('jspdf')
     await import('jspdf-autotable')
 
@@ -11,11 +12,19 @@ export function usePdf() {
     const auth = useAuthStore()
     const doc  = new jsPDF({ unit: 'mm', format: 'a4' })
 
-    const filteredSales = inv.getFilteredSales({ period, productId })
+    const filteredSales = inv.getFilteredSales({ period, productId, targetMonth })
     const salesByProd   = inv.getSalesByProduct(filteredSales)
     const revenue = filteredSales.reduce((s, x) => s + x.qty * x.price, 0)
     const units   = filteredSales.reduce((s, x) => s + x.qty, 0)
     const loss    = inv.totalLossValue
+
+    // Build a human-readable period label
+    let periodLabel = period.toUpperCase()
+    if (period === 'monthly' && targetMonth) {
+      const [yr, mo] = targetMonth.split('-')
+      periodLabel = new Date(parseInt(yr), parseInt(mo) - 1, 1)
+        .toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })
+    }
 
     // ── Header ──
     doc.setFillColor(245, 166, 35)
@@ -27,7 +36,7 @@ export function usePdf() {
 
     doc.setFontSize(8)
     doc.setTextColor(60, 55, 50)
-    doc.text(`Generated: ${new Date().toLocaleString()}   Staff: ${auth.currentUser?.name}   Period: ${period.toUpperCase()}`, 14, 30)
+    doc.text(`Generated: ${new Date().toLocaleString()}   Staff: ${auth.currentUser?.name}   Period: ${periodLabel}`, 14, 30)
 
     // ── Summary Table ──
     doc.setFont('helvetica', 'bold')
@@ -123,7 +132,8 @@ export function usePdf() {
       doc.text(`Exported ${today()}`, 140, 290)
     }
 
-    doc.save(`perishtrack-report-${today()}.pdf`)
+    const fileSuffix = (period === 'monthly' && targetMonth) ? targetMonth : today()
+    doc.save(`perishtrack-report-${fileSuffix}.pdf`)
   }
 
   async function exportReceipt(saleItems, staffName) {

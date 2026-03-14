@@ -32,7 +32,7 @@
       <select class="field-input" v-model="filterCat">
         <option value="">All Categories</option>
         <option value="food">🍞 Food</option>
-        <option value="beverage">☕ Beverage</option>
+        <option value="beverage">🥤 Beverage</option>
       </select>
     </div>
 

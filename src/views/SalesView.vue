@@ -17,7 +17,7 @@
             :value="p.id"
             :disabled="inv.currentBalance(p.id) === 0"
           >
-            {{ p.name }} — bal: {{ inv.currentBalance(p.id) }}
+            {{ p.name }} — balance: {{ inv.currentBalance(p.id) }}
           </option>
         </select>
       </div>
@@ -58,33 +58,12 @@
       <div v-if="formError" class="form-error">{{ formError }}</div>
 
       <button class="btn btn-primary btn-block" @click="recordSale">
-        ✅ Record Sale
+        Record Sale
       </button>
     </div>
 
     <!-- Today's Receipt -->
-    <div v-if="inv.todaySales.length > 0" class="receipt" style="margin-bottom: 16px">
-      <div class="receipt-header">
-        <div class="receipt-logo">🥐 PerishTrack</div>
-        <div class="receipt-meta">{{ todayLabel() }}</div>
-        <div class="receipt-meta">Staff: {{ auth.currentUser?.name }}</div>
-      </div>
-      <div v-for="s in inv.todaySales" :key="s.id" class="receipt-line">
-        <span>{{ inv.productName(s.productId) }} × {{ s.qty }}</span>
-        <span>₱{{ (s.qty * s.price).toFixed(2) }}</span>
-      </div>
-      <div class="receipt-total">
-        <span>TOTAL</span>
-        <span>₱{{ inv.todayRevenue.toFixed(2) }}</span>
-      </div>
-      <button
-        class="btn btn-ghost btn-sm btn-block"
-        style="margin-top:12px"
-        @click="downloadReceipt"
-      >
-        📄 Download Receipt PDF
-      </button>
-    </div>
+    
 
     <!-- All Sales History -->
     <div class="section-heading">Sales History ({{ inv.sales.length }})</div>

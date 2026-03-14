@@ -30,7 +30,11 @@ export const useInventoryStore = defineStore('inventory', () => {
   const totalSold = (pid) =>
     sales.value.filter(s => s.productId === pid).reduce((s, x) => s + x.qty, 0)
 
+  // Only food products expire — beverages never get pullout/loss applied
+  const isPerishable = (pid) => getProduct(pid)?.category === 'food'
+
   const expiredUnits = (pid) => {
+    if (!isPerishable(pid)) return 0
     const expiredBatches = productions.value.filter(
       p => p.productId === pid && daysDiff(p.date) > EXPIRY_DAYS
     )
@@ -45,7 +49,7 @@ export const useInventoryStore = defineStore('inventory', () => {
   const currentBalance = (pid) =>
     Math.max(0, totalProduced(pid) - totalSold(pid) - expiredUnits(pid))
 
-  const isExpired = (pid) => expiredUnits(pid) > 0
+  const isExpired = (pid) => isPerishable(pid) && expiredUnits(pid) > 0
 
   // ─── Expiry Alerts ──────────────────────────────────────────────────────────
   const expiryAlerts = computed(() =>
@@ -79,12 +83,18 @@ export const useInventoryStore = defineStore('inventory', () => {
   const todayProfit = computed(() => todayRevenue.value - totalLossValue.value)
 
   // ─── Report helpers ─────────────────────────────────────────────────────────
-  function getFilteredSales({ period, productId }) {
+  // targetMonth format: "YYYY-MM" — only used when period === 'monthly'
+  function getFilteredSales({ period, productId, targetMonth = null }) {
     return sales.value.filter(s => {
       if (productId && s.productId !== productId) return false
       if (period === 'daily')   return s.date === today()
       if (period === 'weekly')  return daysDiff(s.date) <= 6
       if (period === 'monthly') {
+        if (targetMonth) {
+          // match exact "YYYY-MM" prefix
+          return s.date.startsWith(targetMonth)
+        }
+        // fallback: current month
         const d = new Date(s.date), now = new Date()
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
       }
@@ -147,7 +157,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     products, productions, sales,
     activeProducts, sortedProductions, sortedSales,
     getProduct, productName, productPrice,
-    totalProduced, totalSold, expiredUnits, currentBalance, isExpired,
+    isPerishable, totalProduced, totalSold, expiredUnits, currentBalance, isExpired,
     expiryAlerts, totalExpiredUnits, totalLossValue,
     todaySales, todayRevenue, todayUnitsSold, todayProfit,
     getFilteredSales, getSalesByProduct,

@@ -1,7 +1,7 @@
 <template>
   <div class="login-screen">
     <div class="login-hero">
-      <div class="login-logo">🥐 PerishTrack</div>
+      <div class="login-logo">🥐 BreadTrack</div>
       <div class="login-tagline">Inventory & Sales for perishable goods</div>
     </div>
 
