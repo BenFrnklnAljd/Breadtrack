@@ -90,7 +90,7 @@
         </div>
 
         <div class="product-actions">
-          <button class="btn btn-ghost btn-xs" @click="startEdit(p)">✏️ Edit</button>
+          <button class="btn btn-ghost btn-xs" @click="startEdit(p)"> Edit</button>
           <button class="btn btn-ghost btn-xs" @click="toggleActive(p)">
             {{ p.active ? ' Deactivate' : ' Activate' }}
           </button>
