@@ -22,7 +22,7 @@
         <div class="form-group">
           <label class="field-label">Category</label>
           <select class="field-input" v-model="form.category">
-            <option value="food">🍞 Food</option>
+            <option value="food"> Food</option>
             <option value="beverage">🥤 Beverage</option>
           </select>
         </div>
