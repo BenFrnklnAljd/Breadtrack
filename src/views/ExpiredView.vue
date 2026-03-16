@@ -3,7 +3,7 @@
     <div class="page-title">Expired Products</div>
     <div class="page-subtitle">Read-only pullout log · loss counted in reports</div>
 
-    <!-- Summary -->
+    <!-- Summaary -->
     <div class="exp-summary">
       <div class="exp-sum-item">
         <div class="exp-sum-label">Total Expired Items</div>
