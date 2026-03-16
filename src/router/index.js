@@ -48,6 +48,24 @@ const routes = [
         meta: { title: 'Inventory', icon: '📦' }
       },
       {
+        path: '/expired',
+        name: 'Expired',
+        component: () => import('@/views/ExpiredView.vue'),
+        meta: { title: 'Expired', icon: '🗑️' }
+      },
+      {
+        path: '/expired',
+        name: 'Expired',
+        component: () => import('@/views/ExpiredView.vue'),
+        meta: { title: 'Expired', icon: '🗑️' }
+      },
+      {
+        path: '/expired',
+        name: 'Expired',
+        component: () => import('@/views/ExpiredView.vue'),
+        meta: { title: 'Expired', icon: '🗑️' }
+      },
+      {
         path: '/reports',
         name: 'Reports',
         component: () => import('@/views/ReportsView.vue'),

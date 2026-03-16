@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { STORAGE_KEYS, loadArray, saveData, uid } from '@/utils/storage'
+import { STORAGE_KEYS, loadArray, loadItem, saveData, uid } from '@/utils/storage'
 import { today, daysDiff, EXPIRY_DAYS } from '@/utils/date'
 
 export const useInventoryStore = defineStore('inventory', () => {
@@ -8,6 +8,20 @@ export const useInventoryStore = defineStore('inventory', () => {
   const products    = ref(loadArray(STORAGE_KEYS.PRODUCTS))
   const productions = ref(loadArray(STORAGE_KEYS.PRODUCTIONS))
   const sales       = ref(loadArray(STORAGE_KEYS.SALES))
+
+  // ─── Dismissed alert IDs (persisted) ────────────────────────────────────────
+  const dismissedAlerts = ref(loadItem('pt_dismissed_alerts') || [])
+  watch(dismissedAlerts, v => saveData('pt_dismissed_alerts', v), { deep: true })
+
+  function dismissAlert(productId) {
+    if (!dismissedAlerts.value.includes(productId)) {
+      dismissedAlerts.value.push(productId)
+    }
+  }
+  function restoreDismissedAlerts() {
+    // Clear dismissals so re-expired items show again after a new day
+    dismissedAlerts.value = []
+  }
 
   // ─── Persist ────────────────────────────────────────────────────────────────
   watch(products,    v => saveData(STORAGE_KEYS.PRODUCTS, v),    { deep: true })
@@ -51,8 +65,8 @@ export const useInventoryStore = defineStore('inventory', () => {
 
   const isExpired = (pid) => isPerishable(pid) && expiredUnits(pid) > 0
 
-  // ─── Expiry Alerts ──────────────────────────────────────────────────────────
-  const expiryAlerts = computed(() =>
+  // ─── Expiry Alerts (excludes dismissed) ────────────────────────────────────
+  const allExpiryAlerts = computed(() =>
     activeProducts.value
       .filter(p => isExpired(p.id))
       .map(p => {
@@ -66,6 +80,10 @@ export const useInventoryStore = defineStore('inventory', () => {
           daysOld:   oldest ? daysDiff(oldest.date) : 0
         }
       })
+  )
+  // Only show alerts that haven't been dismissed
+  const expiryAlerts = computed(() =>
+    allExpiryAlerts.value.filter(a => !dismissedAlerts.value.includes(a.productId))
   )
 
   // ─── Loss ───────────────────────────────────────────────────────────────────
@@ -100,6 +118,41 @@ export const useInventoryStore = defineStore('inventory', () => {
       }
       return true
     })
+  }
+
+  // ─── Expired Batch Log (read-only, for ExpiredView) ────────────────────────
+  const expiredBatchLog = computed(() => {
+    const log = []
+    productions.value.forEach(batch => {
+      const product = getProduct(batch.productId)
+      if (!product || product.category !== 'food') return
+      if (daysDiff(batch.date) <= EXPIRY_DAYS) return
+      const soldAfter = sales.value
+        .filter(s => s.productId === batch.productId && s.date >= batch.date)
+        .reduce((a, b) => a + b.qty, 0)
+      const expiredQty = Math.max(0, batch.qty - soldAfter)
+      if (expiredQty === 0) return
+      log.push({
+        batchId:    batch.id,
+        productId:  batch.productId,
+        name:       product.name,
+        produced:   batch.qty,
+        sold:       soldAfter,
+        expiredQty,
+        lossValue:  expiredQty * product.price,
+        date:       batch.date,
+        staffName:  batch.staffName,
+        daysOld:    daysDiff(batch.date)
+      })
+    })
+    return log.sort((a, b) => b.date.localeCompare(a.date))
+  })
+
+  // Monthly loss breakdown
+  function getMonthlyLoss(targetMonth) {
+    return expiredBatchLog.value
+      .filter(e => e.date.startsWith(targetMonth))
+      .reduce((s, e) => s + e.lossValue, 0)
   }
 
   function getSalesByProduct(filteredSales) {
@@ -158,7 +211,9 @@ export const useInventoryStore = defineStore('inventory', () => {
     activeProducts, sortedProductions, sortedSales,
     getProduct, productName, productPrice,
     isPerishable, totalProduced, totalSold, expiredUnits, currentBalance, isExpired,
-    expiryAlerts, totalExpiredUnits, totalLossValue,
+    expiryAlerts, allExpiryAlerts, totalExpiredUnits, totalLossValue,
+    expiredBatchLog, getMonthlyLoss,
+    dismissedAlerts, dismissAlert, restoreDismissedAlerts,
     todaySales, todayRevenue, todayUnitsSold, todayProfit,
     getFilteredSales, getSalesByProduct,
     addProduct, updateProduct, toggleProductActive, productHasTransactions,
