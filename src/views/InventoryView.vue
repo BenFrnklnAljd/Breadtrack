@@ -78,7 +78,7 @@
         </div>
         <div class="money-row">
           <div class="money-left">
-            <span class="money-icon">❌</span>
+            <span class="money-icon"> </span>
             <div>
               <div class="money-label">Loss from Expired</div>
               <div class="money-hint">Value of items thrown out</div>
