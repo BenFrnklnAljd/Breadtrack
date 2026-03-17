@@ -35,7 +35,7 @@
       v-for="p in inv.activeProducts"
       :key="p.id"
       class="stock-item"
-      :class="{ expired: inv.isExpired(p.id) }"
+      :class="stockCardClass(p)"
     >
       <div class="stock-left">
         <div class="stock-name">{{ p.name }}</div>
@@ -46,13 +46,12 @@
       </div>
       <div class="stock-right">
         <div class="stock-bal-label">Balance</div>
-        <div
-          class="stock-bal"
-          :class="inv.isExpired(p.id) ? 'text-red' : inv.currentBalance(p.id) > 0 ? 'text-green' : ''"
-        >
+        <div class="stock-bal" :class="stockBalColor(p)">
           {{ inv.currentBalance(p.id) }}
         </div>
-        <span v-if="inv.isExpired(p.id)" class="tag tag-expired" style="font-size:10px;margin-top:4px">Pullout</span>
+        <span v-if="stockStatus(p) === 'expired'" class="tag tag-expired" style="font-size:10px;margin-top:4px">Pullout</span>
+        <span v-else-if="stockStatus(p) === 'restocked'" class="tag tag-ok" style="font-size:10px;margin-top:4px">Restocked</span>
+        <span v-else-if="stockStatus(p) === 'empty'" class="tag" style="font-size:10px;margin-top:4px;background:var(--surface2);color:var(--muted)">Empty</span>
       </div>
     </div>
   </div>
@@ -64,6 +63,36 @@ import { todayLabel } from '@/utils/date'
 import StatCard from '@/components/ui/StatCard.vue'
 
 const inv = useInventoryStore()
+
+// Stock status logic:
+// - 'expired'   → has expired units AND no new fresh balance (all stock is old)
+// - 'restocked' → had expired units but NEW production brought fresh balance back
+// - 'ok'        → has balance, nothing expired
+// - 'empty'     → zero balance, nothing expired
+function stockStatus(p) {
+  const balance  = inv.currentBalance(p.id)
+  const hasExpired = inv.isExpired(p.id)
+
+  if (hasExpired && balance > 0) return 'restocked'  // new stock added after expiry
+  if (hasExpired && balance === 0) return 'expired'   // fully expired, nothing new
+  if (balance > 0) return 'ok'
+  return 'empty'
+}
+
+function stockCardClass(p) {
+  const s = stockStatus(p)
+  if (s === 'expired')   return 'stock-expired'
+  if (s === 'restocked') return 'stock-restocked'
+  return ''
+}
+
+function stockBalColor(p) {
+  const s = stockStatus(p)
+  if (s === 'expired')   return 'text-red'
+  if (s === 'restocked') return 'text-green'
+  if (s === 'ok')        return 'text-green'
+  return 'text-muted'
+}
 </script>
 
 <style scoped>
@@ -89,7 +118,8 @@ const inv = useInventoryStore()
   margin-bottom: 10px;
   transition: border-color .2s;
 }
-.stock-item.expired { border-color: rgba(224,82,82,.3); background: rgba(224,82,82,.04); }
+.stock-item.stock-expired    { border-color: rgba(224,82,82,.3);  background: rgba(224,82,82,.04); }
+.stock-item.stock-restocked { border-color: rgba(76,175,121,.3); background: rgba(76,175,121,.04); transition: all .4s ease; }
 .stock-name { font-weight: 600; font-size: 15px; margin-bottom: 6px; }
 .stock-meta { display: flex; align-items: center; gap: 8px; }
 .stock-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
