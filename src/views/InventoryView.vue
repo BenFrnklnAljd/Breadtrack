@@ -68,7 +68,11 @@
         <div class="money-title">Revenue Summary</div>
         <div class="money-row">
           <div class="money-left">
+<<<<<<< HEAD
             <span class="money-icon"></span>
+=======
+            <span class="money-icon"> </span>
+>>>>>>> 9f32d946c7d9c2427cef210d59a016cb80a1671a
             <div>
               <div class="money-label">Sales Revenue</div>
               <div class="money-hint">Money collected from customers</div>
@@ -78,7 +82,11 @@
         </div>
         <div class="money-row">
           <div class="money-left">
+<<<<<<< HEAD
             <span class="money-icon"></span>
+=======
+            <span class="money-icon"> </span>
+>>>>>>> 9f32d946c7d9c2427cef210d59a016cb80a1671a
             <div>
               <div class="money-label">Loss from Expired</div>
               <div class="money-hint">Value of items thrown out</div>
