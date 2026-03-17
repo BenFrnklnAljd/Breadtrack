@@ -7,7 +7,8 @@
     <div class="summary-section">
 
       <!-- Section label -->
-      
+      <div class="summary-section-label">📦 Inventory at a Glance</div>
+      <div class="summary-section-hint">Here's everything that happened with your stock — all-time totals.</div>
 
       <!-- 4 Stat Tiles -->
       <div class="stat-tiles">
@@ -65,14 +66,10 @@
 
       <!-- Money Summary -->
       <div class="money-card">
-        <div class="money-title">Revenue Summary</div>
+        <div class="money-title">💰 Money Summary</div>
         <div class="money-row">
           <div class="money-left">
-<<<<<<< HEAD
-            <span class="money-icon"></span>
-=======
-            <span class="money-icon"> </span>
->>>>>>> 9f32d946c7d9c2427cef210d59a016cb80a1671a
+            <span class="money-icon">✅</span>
             <div>
               <div class="money-label">Sales Revenue</div>
               <div class="money-hint">Money collected from customers</div>
@@ -82,11 +79,7 @@
         </div>
         <div class="money-row">
           <div class="money-left">
-<<<<<<< HEAD
-            <span class="money-icon"></span>
-=======
-            <span class="money-icon"> </span>
->>>>>>> 9f32d946c7d9c2427cef210d59a016cb80a1671a
+            <span class="money-icon">❌</span>
             <div>
               <div class="money-label">Loss from Expired</div>
               <div class="money-hint">Value of items thrown out</div>
@@ -97,7 +90,7 @@
         <div class="money-divider"></div>
         <div class="money-result" :class="grandTotals.net >= 0 ? 'profit' : 'loss'">
           <div class="money-result-left">
-            <span class="money-result-icon">{{ grandTotals.net >= 0 ? ' ' : ' ' }}</span>
+            <span class="money-result-icon">{{ grandTotals.net >= 0 ? '📈' : '📉' }}</span>
             <div>
               <div class="money-result-label">{{ grandTotals.net >= 0 ? 'Net Profit' : 'Net Loss' }}</div>
               <div class="money-result-hint">{{ grandTotals.net >= 0 ? 'Revenue minus expired losses' : 'Losses exceed revenue' }}</div>
