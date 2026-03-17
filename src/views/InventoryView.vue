@@ -89,7 +89,7 @@
         <div class="money-divider"></div>
         <div class="money-result" :class="grandTotals.net >= 0 ? 'profit' : 'loss'">
           <div class="money-result-left">
-            <span class="money-result-icon">{{ grandTotals.net >= 0 ? '📈' : '📉' }}</span>
+            <span class="money-result-icon">{{ grandTotals.net >= 0 ? ' ' : '📉' }}</span>
             <div>
               <div class="money-result-label">{{ grandTotals.net >= 0 ? 'Net Profit' : 'Net Loss' }}</div>
               <div class="money-result-hint">{{ grandTotals.net >= 0 ? 'Revenue minus expired losses' : 'Losses exceed revenue' }}</div>
