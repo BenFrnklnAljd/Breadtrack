@@ -65,7 +65,7 @@
 
       <!-- Money Summary -->
       <div class="money-card">
-        <div class="money-title">💰 Money Summary</div>
+        <div class="money-title">Revenue Summary</div>
         <div class="money-row">
           <div class="money-left">
             <span class="money-icon">✅</span>
