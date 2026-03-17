@@ -3,11 +3,7 @@
     <div class="page-title">Expired Products</div>
     <div class="page-subtitle">Read-only pullout log · loss counted in reports</div>
 
-<<<<<<< HEAD
     <!-- Summary Bar -->
-=======
-    <!-- Summaary -->
->>>>>>> 9f32d946c7d9c2427cef210d59a016cb80a1671a
     <div class="exp-summary">
       <div class="exp-sum-item">
         <div class="exp-sum-label">Expired Units</div>
@@ -44,7 +40,7 @@
 
     <!-- Read-only notice -->
     <div class="readonly-notice">
-       Expired records are read-only. Original production records remain intact.
+      &#128274; Expired records are read-only. Original production records remain intact.
     </div>
 
     <!-- Empty state -->
@@ -283,7 +279,6 @@ const affectedProducts = computed(() =>
 .exp-table-val.red   { color: var(--red); }
 .exp-table-val.bold  { font-size: 15px; }
 
-<<<<<<< HEAD
 /* ── Footer ── */
 .exp-card-footer {
   padding: 8px 16px;
@@ -294,7 +289,3 @@ const affectedProducts = computed(() =>
   background: var(--surface);
 }
 </style>
-=======
-.exp-footer { display: flex; justify-content: flex-end; }
-</style>
->>>>>>> 9f32d946c7d9c2427cef210d59a016cb80a1671a
