@@ -68,7 +68,7 @@
         <div class="money-title">Revenue Summary</div>
         <div class="money-row">
           <div class="money-left">
-            <span class="money-icon">✅</span>
+            <span class="money-icon"> </span>
             <div>
               <div class="money-label">Sales Revenue</div>
               <div class="money-hint">Money collected from customers</div>
