@@ -7,8 +7,7 @@
     <div class="summary-section">
 
       <!-- Section label -->
-      <div class="summary-section-label">📦 Inventory at a Glance</div>
-      <div class="summary-section-hint">Here's everything that happened with your stock — all-time totals.</div>
+      
 
       <!-- 4 Stat Tiles -->
       <div class="stat-tiles">
