@@ -6,7 +6,7 @@
     <!-- Add / Edit Form -->
     <div class="add-panel">
       <div class="add-panel-title">
-        {{ editing ? '✏️ Edit Product' : '+ Add Product' }}
+        {{ editing ? 'Edit Product' : '+ Add Product' }}
       </div>
 
       <div class="form-group">
