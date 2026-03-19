@@ -72,7 +72,7 @@
 
         <div class="product-meta">
           <span :class="p.category === 'food' ? 'tag tag-food' : 'tag tag-bev'">
-            {{ p.category === 'food' ? ' Food' : '☕ Beverage' }}
+            {{ p.category === 'food' ? ' Food' : ' Beverage' }}
           </span>
           <span class="price-tag">₱{{ p.price }}</span>
           <span class="date-meta">Added {{ p.createdAt }}</span>
