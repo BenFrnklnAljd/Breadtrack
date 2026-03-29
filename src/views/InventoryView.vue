@@ -3,7 +3,7 @@
     <div class="page-title">Stock Overview</div>
     <div class="page-subtitle">Full inventory computation</div>
     <div class="summary-block">
-      <div class="summary-block-title">📦 All-Time Totals</div>
+      <div class="summary-block-title"> All-Time Totals</div>
       <div class="list-row"><span class="list-label">Total Produced</span><span class="list-val">{{ grand.produced }} units</span></div>
       <div class="list-row"><span class="list-label">Total Sold</span><span class="list-val text-green">{{ grand.sold }} units</span></div>
       <div class="list-row"><span class="list-label">Expired / Pullout</span><span class="list-val text-red">{{ grand.expired }} units</span></div>
