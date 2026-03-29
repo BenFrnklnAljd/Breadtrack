@@ -5,7 +5,7 @@
     <header class="topbar">
       <div class="topbar-brand">
         <span class="topbar-icon"></span>
-        <span class="topbar-name">PerishTrack</span>
+        <span class="topbar-name">BreadTrack</span>
       </div>
       <div class="topbar-right">
         <span class="topbar-user">{{ auth.currentUser?.name }}</span>
