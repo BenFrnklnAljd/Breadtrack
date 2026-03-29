@@ -4,7 +4,7 @@
     <!-- Top Bar -->
     <header class="topbar">
       <div class="topbar-brand">
-        <span class="topbar-icon">🥐</span>
+        <span class="topbar-icon"></span>
         <span class="topbar-name">PerishTrack</span>
       </div>
       <div class="topbar-right">
