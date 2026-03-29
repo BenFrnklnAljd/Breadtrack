@@ -44,26 +44,60 @@ export const useInventoryStore = defineStore('inventory', () => {
   const totalSold = (pid) =>
     sales.value.filter(s => s.productId === pid).reduce((s, x) => s + x.qty, 0)
 
-  // Only food products expire — beverages never get pullout/loss applied
+  // Only food products expire — beverages never expire
   const isPerishable = (pid) => getProduct(pid)?.category === 'food'
 
-  const expiredUnits = (pid) => {
-    if (!isPerishable(pid)) return 0
-    const expiredBatches = productions.value.filter(
-      p => p.productId === pid && daysDiff(p.date) > EXPIRY_DAYS
-    )
-    return expiredBatches.reduce((sum, batch) => {
-      const soldAfter = sales.value
-        .filter(s => s.productId === pid && s.date >= batch.date)
-        .reduce((a, b) => a + b.qty, 0)
-      return sum + Math.max(0, batch.qty - soldAfter)
-    }, 0)
+  /**
+   * Core FIFO engine — processes all batches oldest-first and allocates
+   * sales against them in order. Returns per-batch breakdown.
+   *
+   * Each batch result: { batch, soldFromBatch, remainingInBatch, isExpiredBatch }
+   */
+  const getBatchBreakdown = (pid) => {
+    const batches = productions.value
+      .filter(p => p.productId === pid)
+      .slice()
+      .sort((a, b) => a.date.localeCompare(b.date))
+
+    const totalSalesQty = sales.value
+      .filter(s => s.productId === pid)
+      .reduce((a, b) => a + b.qty, 0)
+
+    let salesPool = totalSalesQty
+    const result = []
+
+    for (const batch of batches) {
+      const soldFromBatch      = Math.min(salesPool, batch.qty)
+      salesPool               -= soldFromBatch
+      const remainingInBatch   = batch.qty - soldFromBatch
+      const isExpiredBatch     = isPerishable(pid) && daysDiff(batch.date) > EXPIRY_DAYS
+
+      result.push({ batch, soldFromBatch, remainingInBatch, isExpiredBatch })
+    }
+
+    return result
   }
 
-  const currentBalance = (pid) =>
-    Math.max(0, totalProduced(pid) - totalSold(pid) - expiredUnits(pid))
+  // Expired units = remaining units in expired batches (after FIFO sales allocation)
+  const expiredUnits = (pid) => {
+    if (!isPerishable(pid)) return 0
+    return getBatchBreakdown(pid)
+      .filter(r => r.isExpiredBatch)
+      .reduce((s, r) => s + r.remainingInBatch, 0)
+  }
 
+  // Available balance = remaining units in NON-expired batches only
+  const currentBalance = (pid) => {
+    return getBatchBreakdown(pid)
+      .filter(r => !r.isExpiredBatch)
+      .reduce((s, r) => s + r.remainingInBatch, 0)
+  }
+
+  // Has expired stock sitting unsold
   const isExpired = (pid) => isPerishable(pid) && expiredUnits(pid) > 0
+
+  // Alias — makes intent clear in views: how many can actually be sold right now
+  const sellableBalance = (pid) => currentBalance(pid)
 
   // ─── Expiry Alerts (excludes dismissed) ────────────────────────────────────
   const allExpiryAlerts = computed(() =>
@@ -121,28 +155,27 @@ export const useInventoryStore = defineStore('inventory', () => {
   }
 
   // ─── Expired Batch Log (read-only, for ExpiredView) ────────────────────────
+  // Uses the same FIFO engine so numbers match currentBalance exactly
   const expiredBatchLog = computed(() => {
     const log = []
-    productions.value.forEach(batch => {
-      const product = getProduct(batch.productId)
-      if (!product || product.category !== 'food') return
-      if (daysDiff(batch.date) <= EXPIRY_DAYS) return
-      const soldAfter = sales.value
-        .filter(s => s.productId === batch.productId && s.date >= batch.date)
-        .reduce((a, b) => a + b.qty, 0)
-      const expiredQty = Math.max(0, batch.qty - soldAfter)
-      if (expiredQty === 0) return
-      log.push({
-        batchId:    batch.id,
-        productId:  batch.productId,
-        name:       product.name,
-        produced:   batch.qty,
-        sold:       soldAfter,
-        expiredQty,
-        lossValue:  expiredQty * product.price,
-        date:       batch.date,
-        staffName:  batch.staffName,
-        daysOld:    daysDiff(batch.date)
+    // Process each product's breakdown
+    activeProducts.value.forEach(product => {
+      if (product.category !== 'food') return
+      const breakdown = getBatchBreakdown(product.id)
+      breakdown.forEach(({ batch, soldFromBatch, remainingInBatch, isExpiredBatch }) => {
+        if (!isExpiredBatch || remainingInBatch === 0) return
+        log.push({
+          batchId:    batch.id,
+          productId:  product.id,
+          name:       product.name,
+          produced:   batch.qty,
+          sold:       soldFromBatch,
+          expiredQty: remainingInBatch,
+          lossValue:  remainingInBatch * product.price,
+          date:       batch.date,
+          staffName:  batch.staffName,
+          daysOld:    daysDiff(batch.date)
+        })
       })
     })
     return log.sort((a, b) => b.date.localeCompare(a.date))
@@ -210,7 +243,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     products, productions, sales,
     activeProducts, sortedProductions, sortedSales,
     getProduct, productName, productPrice,
-    isPerishable, totalProduced, totalSold, expiredUnits, currentBalance, isExpired,
+    isPerishable, getBatchBreakdown, totalProduced, totalSold, expiredUnits, currentBalance, sellableBalance, isExpired,
     expiryAlerts, allExpiryAlerts, totalExpiredUnits, totalLossValue,
     expiredBatchLog, getMonthlyLoss,
     dismissedAlerts, dismissAlert, restoreDismissedAlerts,

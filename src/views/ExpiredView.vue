@@ -2,290 +2,61 @@
   <div class="page">
     <div class="page-title">Expired Products</div>
     <div class="page-subtitle">Read-only pullout log · loss counted in reports</div>
-
-    <!-- Summary Bar -->
     <div class="exp-summary">
-      <div class="exp-sum-item">
-        <div class="exp-sum-label">Expired Units</div>
-        <div class="exp-sum-val red">{{ inv.totalExpiredUnits }}</div>
-      </div>
-      <div class="exp-sum-divider"></div>
-      <div class="exp-sum-item">
-        <div class="exp-sum-label">Total Loss</div>
-        <div class="exp-sum-val red">&#8369;{{ inv.totalLossValue.toFixed(2) }}</div>
-      </div>
-      <div class="exp-sum-divider"></div>
-      <div class="exp-sum-item">
-        <div class="exp-sum-label">Products</div>
-        <div class="exp-sum-val">{{ affectedProducts }}</div>
-      </div>
+      <div class="exp-sum-item"><div class="exp-sum-label">Expired Units</div><div class="exp-sum-val text-red">{{ inv.totalExpiredUnits }}</div></div>
+      <div class="exp-sum-div"></div>
+      <div class="exp-sum-item"><div class="exp-sum-label">Total Loss</div><div class="exp-sum-val text-red">₱{{ inv.totalLossValue.toFixed(2) }}</div></div>
+      <div class="exp-sum-div"></div>
+      <div class="exp-sum-item"><div class="exp-sum-label">Products</div><div class="exp-sum-val">{{ affectedProducts }}</div></div>
     </div>
-
-    <!-- Month filter -->
-    <div class="form-group">
-      <label class="field-label">Filter by Month</label>
-      <select class="field-input" v-model="filterMonth">
-        <option value="">All Time</option>
-        <option v-for="m in availableMonths" :key="m.value" :value="m.value">
-          {{ m.label }}
-        </option>
-      </select>
-    </div>
-
-    <!-- Monthly loss banner -->
-    <div v-if="filterMonth" class="monthly-banner">
-      <span>&#128197; Loss for {{ filterMonthLabel }}</span>
-      <span class="monthly-banner-val">&#8369;{{ monthlyLoss.toFixed(2) }}</span>
-    </div>
-
-    <!-- Read-only notice -->
-    <div class="readonly-notice">
-      &#128274; Expired records are read-only. Original production records remain intact.
-    </div>
-
-    <!-- Empty state -->
-    <div v-if="filteredLog.length === 0" class="empty-state">
-      <div class="empty-icon">&#9989;</div>
-      <div class="empty-text">
-        {{ filterMonth ? 'No expired products for this month.' : 'No expired products yet.' }}
-      </div>
-    </div>
-
-    <!-- Expired Batch Cards -->
-    <div v-for="entry in filteredLog" :key="entry.batchId" class="exp-card">
-
-      <div class="exp-card-header">
-        <div class="exp-card-header-left">
-          <div class="exp-name">{{ entry.name }}</div>
-          <div class="exp-meta">Produced: {{ entry.date }} &middot; {{ entry.staffName }}</div>
-        </div>
+    <div class="form-group"><label class="field-label">Filter by Month</label><select class="field-input" v-model="filterMonth"><option value="">All Time</option><option v-for="m in months" :key="m.value" :value="m.value">{{ m.label }}</option></select></div>
+    <div v-if="filterMonth" class="month-loss-banner"><span>📅 Loss for {{ filterMonthLabel }}</span><span class="text-red" style="font-family:var(--font-head);font-weight:700;font-size:16px">₱{{ monthlyLoss.toFixed(2) }}</span></div>
+    <div class="readonly-notice">🔒 These records are read-only. Original production entries remain intact.</div>
+    <div v-if="filteredLog.length === 0" class="empty-state"><div class="empty-icon">✅</div><div class="empty-text">{{ filterMonth ? 'No expired products this month.' : 'No expired products yet.' }}</div></div>
+    <div v-for="e in filteredLog" :key="e.batchId" class="exp-card">
+      <div class="exp-card-top">
+        <div class="exp-card-info"><div class="exp-name">{{ e.name }}</div><div class="date-meta">Produced: {{ e.date }} · {{ e.staffName }}</div></div>
         <div class="exp-tag">Expired</div>
       </div>
-
-      <div class="exp-table">
-        <div class="exp-table-row">
-          <span class="exp-table-label">Originally Produced</span>
-          <span class="exp-table-val">{{ entry.produced }} units</span>
-        </div>
-        <div class="exp-table-row">
-          <span class="exp-table-label">Sold Before Expiry</span>
-          <span class="exp-table-val green">{{ entry.sold }} units</span>
-        </div>
-        <div class="exp-table-row">
-          <span class="exp-table-label">Expired / Pullout</span>
-          <span class="exp-table-val red">{{ entry.expiredQty }} units</span>
-        </div>
-        <div class="exp-table-row total-row">
-          <span class="exp-table-label bold">Loss Value</span>
-          <span class="exp-table-val red bold">&#8369;{{ entry.lossValue.toFixed(2) }}</span>
-        </div>
+      <div class="exp-breakdown">
+        <div class="exp-row"><span class="exp-row-label">Originally Produced</span><span class="exp-row-val">{{ e.produced }} units</span></div>
+        <div class="exp-row"><span class="exp-row-label">Sold Before Expiry</span><span class="exp-row-val text-green">{{ e.sold }} units</span></div>
+        <div class="exp-row"><span class="exp-row-label">Expired / Pullout</span><span class="exp-row-val text-red">{{ e.expiredQty }} units</span></div>
+        <div class="exp-row exp-row-total"><span class="exp-row-label" style="font-weight:600;color:var(--text)">Loss Value</span><span class="exp-row-val text-red" style="font-size:15px">₱{{ e.lossValue.toFixed(2) }}</span></div>
       </div>
-
-      <div class="exp-card-footer">
-        {{ entry.daysOld }} days since production
-      </div>
-
+      <div class="exp-footer">{{ e.daysOld }} days since production</div>
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, computed } from 'vue'
 import { useInventoryStore } from '@/stores/inventory'
-
 const inv = useInventoryStore()
 const filterMonth = ref('')
-
-const availableMonths = computed(() => {
-  const seen = new Set()
-  inv.expiredBatchLog.forEach(e => seen.add(e.date.slice(0, 7)))
-  return [...seen].sort((a, b) => b.localeCompare(a)).map(m => {
-    const [yr, mo] = m.split('-')
-    const label = new Date(parseInt(yr), parseInt(mo) - 1, 1)
-      .toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })
-    return { value: m, label }
-  })
-})
-
-const filterMonthLabel = computed(() =>
-  availableMonths.value.find(m => m.value === filterMonth.value)?.label || ''
-)
-
-const filteredLog = computed(() =>
-  filterMonth.value
-    ? inv.expiredBatchLog.filter(e => e.date.startsWith(filterMonth.value))
-    : inv.expiredBatchLog
-)
-
-const monthlyLoss = computed(() =>
-  filteredLog.value.reduce((s, e) => s + e.lossValue, 0)
-)
-
-const affectedProducts = computed(() =>
-  new Set(inv.expiredBatchLog.map(e => e.productId)).size
-)
+const months = computed(() => { const seen = new Set(); inv.expiredBatchLog.forEach(e => seen.add(e.date.slice(0,7))); return [...seen].sort((a,b) => b.localeCompare(a)).map(m => { const [y,mo] = m.split('-'); const label = new Date(+y,+mo-1,1).toLocaleDateString('en-PH',{month:'long',year:'numeric'}); return { value: m, label } }) })
+const filterMonthLabel = computed(() => months.value.find(m => m.value === filterMonth.value)?.label || '')
+const filteredLog = computed(() => filterMonth.value ? inv.expiredBatchLog.filter(e => e.date.startsWith(filterMonth.value)) : inv.expiredBatchLog)
+const monthlyLoss = computed(() => filteredLog.value.reduce((s,e) => s+e.lossValue,0))
+const affectedProducts = computed(() => new Set(inv.expiredBatchLog.map(e => e.productId)).size)
 </script>
-
 <style scoped>
-/* ── Summary Bar ── */
-.exp-summary {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 12px;
-  margin-bottom: 16px;
-}
-.exp-sum-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-.exp-sum-divider {
-  width: 1px;
-  height: 36px;
-  background: var(--border);
-  flex-shrink: 0;
-  margin: 0 6px;
-}
-.exp-sum-label {
-  font-size: 9px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  text-align: center;
-}
-.exp-sum-val {
-  font-family: var(--font-head);
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1;
-  color: var(--text);
-}
-.exp-sum-val.red { color: var(--red); }
-
-/* ── Monthly Banner ── */
-.monthly-banner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--red-dim);
-  border: 1px solid rgba(224,82,82,.25);
-  border-radius: var(--radius-sm);
-  padding: 11px 14px;
-  margin-bottom: 12px;
-  font-size: 13px;
-  color: var(--text2);
-}
-.monthly-banner-val {
-  font-family: var(--font-head);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--red);
-}
-
-/* ── Read-only Notice ── */
-.readonly-notice {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius-xs);
-  padding: 10px 14px;
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 16px;
-  line-height: 1.6;
-}
-
-/* ── Expired Card ── */
-.exp-card {
-  background: var(--surface);
-  border: 1px solid rgba(224,82,82,.22);
-  border-radius: var(--radius);
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-.exp-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--border);
-}
-.exp-card-header-left {
-  flex: 1;
-  padding-right: 10px;
-}
-.exp-name {
-  font-family: var(--font-head);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 3px;
-}
-.exp-meta {
-  font-size: 11px;
-  color: var(--muted);
-}
-.exp-tag {
-  background: var(--red-dim);
-  color: var(--red);
-  border: 1px solid rgba(224,82,82,.3);
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 10px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-/* ── Breakdown Table ── */
-.exp-table {
-  background: var(--surface2);
-}
-.exp-table-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-}
-.exp-table-row:last-child {
-  border-bottom: none;
-}
-.exp-table-row.total-row {
-  background: var(--surface);
-  padding: 12px 16px;
-}
-.exp-table-label {
-  color: var(--text2);
-}
-.exp-table-label.bold {
-  font-weight: 600;
-  color: var(--text);
-}
-.exp-table-val {
-  font-family: var(--font-head);
-  font-weight: 700;
-  font-size: 13px;
-  color: var(--text);
-}
-.exp-table-val.green { color: var(--green); }
-.exp-table-val.red   { color: var(--red); }
-.exp-table-val.bold  { font-size: 15px; }
-
-/* ── Footer ── */
-.exp-card-footer {
-  padding: 8px 16px;
-  font-size: 11px;
-  color: var(--muted);
-  border-top: 1px solid var(--border);
-  text-align: right;
-  background: var(--surface);
-}
+.exp-summary { display: flex; flex-direction: row; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 12px; margin-bottom: 16px; }
+.exp-sum-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.exp-sum-div { width: 1px; height: 36px; background: var(--border); flex-shrink: 0; margin: 0 6px; }
+.exp-sum-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; text-align: center; }
+.exp-sum-val { font-family: var(--font-head); font-size: 20px; font-weight: 800; line-height: 1; }
+.month-loss-banner { display: flex; justify-content: space-between; align-items: center; background: var(--red-dim); border: 1px solid rgba(224,82,82,.2); border-radius: var(--radius-sm); padding: 11px 14px; margin-bottom: 12px; font-size: 13px; color: var(--text2); }
+.readonly-notice { background: var(--surface2); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--radius-xs); padding: 10px 14px; font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
+.exp-card { background: var(--surface); border: 1px solid rgba(224,82,82,.2); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+.exp-card-top { display: flex; justify-content: space-between; align-items: flex-start; padding: 14px 14px 12px; border-bottom: 1px solid var(--border); }
+.exp-card-info { flex: 1; padding-right: 10px; }
+.exp-name { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.exp-tag { background: var(--red-dim); color: var(--red); border: 1px solid rgba(224,82,82,.25); border-radius: 20px; font-size: 11px; font-weight: 600; padding: 3px 10px; flex-shrink: 0; }
+.exp-breakdown { background: var(--surface2); }
+.exp-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.exp-row:last-child { border-bottom: none; }
+.exp-row.exp-row-total { background: var(--surface); padding: 11px 14px; }
+.exp-row-label { color: var(--text2); }
+.exp-row-val { font-family: var(--font-head); font-weight: 700; font-size: 13px; }
+.exp-footer { padding: 7px 14px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); text-align: right; background: var(--surface); }
 </style>

@@ -2,8 +2,16 @@
 
 export const today = () => new Date().toISOString().slice(0, 10)
 
-export const daysDiff = (dateStr) =>
-  Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000)
+export const daysDiff = (dateStr) => {
+  // Compare date strings directly to avoid timezone issues
+  // Both today() and stored dates are in YYYY-MM-DD local format
+  const todayStr = today()
+  const [ty, tm, td] = todayStr.split('-').map(Number)
+  const [dy, dm, dd] = dateStr.slice(0, 10).split('-').map(Number)
+  const todayMs = Date.UTC(ty, tm - 1, td)
+  const dateMs  = Date.UTC(dy, dm - 1, dd)
+  return Math.floor((todayMs - dateMs) / 86_400_000)
+}
 
 export const formatDate = (dateStr) =>
   new Date(dateStr).toLocaleDateString('en-PH', {
@@ -36,7 +44,7 @@ export const getExpiryStatus = (dateStr) => {
 
 export const expiryLabel = (dateStr) => {
   const status = getExpiryStatus(dateStr)
-  return { expired: 'Expired', expiring: 'Expiring', day2: '2 Days', fresh: 'Fresh' }[status]
+  return { expired: 'Expired', expiring: 'Expiring', day2: 'Day 2', fresh: 'Fresh' }[status]
 }
 
 export const expiryTagClass = (dateStr) => {

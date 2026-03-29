@@ -2,166 +2,54 @@
   <div class="page">
     <div class="page-title">Reports</div>
     <div class="page-subtitle">Analytics & exports</div>
-
-    <!-- Period Selector -->
-    <div class="period-tabs">
-      <button
-        v-for="p in periods"
-        :key="p.value"
-        :class="['period-btn', period === p.value ? 'active' : '']"
-        @click="period = p.value"
-      >
-        {{ p.label }}
-      </button>
+    <div class="period-row">
+      <button v-for="p in periods" :key="p.v" :class="['period-btn', period === p.v ? 'active' : '']" @click="period = p.v">{{ p.label }}</button>
     </div>
-
-    <!-- Month Picker — only shown when Monthly is selected -->
     <Transition name="fade">
-      <div v-if="period === 'monthly'" class="month-picker-wrap">
-        <div class="month-picker-label">
-          <span>📅 Select Month</span>
-          <span class="month-display">{{ selectedMonthLabel }}</span>
-        </div>
-        <input
-          class="field-input"
-          type="month"
-          v-model="selectedMonth"
-          :max="currentYearMonth"
-        />
-
+      <div v-if="period === 'monthly'" class="month-picker">
+        <div class="month-picker-top"><span style="font-size:13px;color:var(--text2)">📅 Select Month</span><span style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--accent)">{{ selectedMonthLabel }}</span></div>
+        <input class="field-input" type="month" v-model="selectedMonth" :max="currentYM" />
       </div>
     </Transition>
-
-    <!-- Product Filter -->
-    <div class="form-group">
-      <label class="field-label">Filter by Product</label>
-      <select class="field-input" v-model="productFilter">
-        <option value="">All Products</option>
-        <option v-for="p in inv.products" :key="p.id" :value="p.id">{{ p.name }}</option>
-      </select>
-    </div>
-
-    <!-- Active period banner -->
-    <div class="period-banner">
-      <span class="period-banner-icon"></span>
-      <span class="period-banner-text">Showing: <strong>{{ activePeriodLabel }}</strong></span>
-      <span class="period-banner-count">{{ filteredSales.length }} sale{{ filteredSales.length !== 1 ? 's' : '' }}</span>
-    </div>
-
-    <!-- Summary Stats -->
+    <div class="form-group"><label class="field-label">Filter by Product</label><select class="field-input" v-model="productFilter"><option value="">All Products</option><option v-for="p in inv.products" :key="p.id" :value="p.id">{{ p.name }}</option></select></div>
+    <div class="period-badge"><span>Showing: <strong>{{ activePeriodLabel }}</strong></span><span style="color:var(--muted);font-size:12px">{{ filtered.length }} sales</span></div>
     <div class="stats-grid">
-      <StatCard
-        label="Revenue"
-        :value="'₱' + stats.revenue.toFixed(2)"
-        color="text-accent"
-      />
-      <StatCard
-        label="Units Sold"
-        :value="stats.units"
-      />
-      <StatCard
-        label="Loss"
-        :value="'₱' + stats.loss.toFixed(2)"
-        color="text-red"
-      />
-      <StatCard
-        label="Net Profit"
-        :value="'₱' + stats.net.toFixed(2)"
-        :color="stats.net >= 0 ? 'text-green' : 'text-red'"
-      />
+      <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-val val-accent">₱{{ stats.revenue.toFixed(2) }}</div></div>
+      <div class="stat-card"><div class="stat-label">Units Sold</div><div class="stat-val">{{ stats.units }}</div></div>
+      <div class="stat-card"><div class="stat-label">Loss</div><div class="stat-val val-red">₱{{ stats.loss.toFixed(2) }}</div></div>
+      <div class="stat-card"><div class="stat-label">Net Profit</div><div class="stat-val" :class="stats.net >= 0 ? 'val-green' : 'val-red'">₱{{ stats.net.toFixed(2) }}</div></div>
     </div>
-
-    <!-- Profit indicator -->
-    <div class="profit-row">
-      <span class="profit-label">Profit / Loss Status</span>
-      <span :class="['profit-badge', stats.net >= 0 ? 'pos' : 'neg']">
-        {{ stats.net >= 0 ? 'Profitable' : 'At a Loss' }}
-      </span>
-    </div>
-
-    <!-- Sales by Product Chart -->
     <div class="card" style="margin-bottom:12px">
-      <div class="chart-title">Sales by Product</div>
-      <div v-if="salesByProduct.length === 0" style="font-size:13px;color:var(--muted);padding:8px 0">
-        No sales data for this period.
-      </div>
+      <div style="font-family:var(--font-head);font-size:13px;font-weight:700;margin-bottom:14px">Sales by Product</div>
+      <div v-if="byProduct.length === 0" style="font-size:13px;color:var(--muted)">No data.</div>
       <div v-else class="bar-chart">
-        <div v-for="item in salesByProduct" :key="item.id" class="bar-row">
-          <div class="bar-label" :title="item.name">{{ item.name }}</div>
-          <div class="bar-track">
-            <div class="bar-fill sales" :style="{ width: item.pct + '%' }">
-              {{ item.revenue > 0 ? '₱' + item.revenue.toFixed(0) : '' }}
-            </div>
-          </div>
-        </div>
+        <div v-for="item in byProduct" :key="item.id" class="bar-row"><div class="bar-label">{{ item.name }}</div><div class="bar-track"><div class="bar-fill sales" :style="{ width: item.pct + '%' }">{{ item.revenue > 0 ? '₱'+item.revenue.toFixed(0) : '' }}</div></div></div>
       </div>
     </div>
-
-    <!-- Sales Table -->
     <div class="card" style="margin-bottom:16px">
-      <div class="chart-title">
-        Sales Log
-        <span class="log-count">({{ filteredSales.length }} entries)</span>
-      </div>
-      <div v-if="filteredSales.length === 0" style="font-size:13px;color:var(--muted);padding:8px 0">
-        No sales in this period.
-      </div>
+      <div style="font-family:var(--font-head);font-size:13px;font-weight:700;margin-bottom:12px">Sales Log</div>
+      <div v-if="filtered.length === 0" style="font-size:13px;color:var(--muted)">No sales in this period.</div>
       <div v-else>
-        <div class="log-header">
-          <span>Date</span>
-          <span>Product</span>
-          <span style="text-align:right">Amount</span>
-        </div>
-        <div
-          v-for="s in filteredSales.slice().reverse()"
-          :key="s.id"
-          class="log-row"
-        >
-          <span class="log-date">{{ s.date }}</span>
-          <span class="log-product">{{ inv.productName(s.productId) }}</span>
-          <span class="log-amount">₱{{ (s.qty * s.price).toFixed(2) }}</span>
-        </div>
+        <div class="log-head"><span>Date</span><span>Product</span><span style="text-align:right">Amount</span></div>
+        <div v-for="s in filtered.slice().reverse()" :key="s.id" class="log-row"><span style="font-size:11px;color:var(--muted)">{{ s.date }}</span><span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ inv.productName(s.productId) }}</span><span style="font-family:var(--font-head);font-weight:700;color:var(--accent);text-align:right">₱{{ (s.qty*s.price).toFixed(2) }}</span></div>
       </div>
     </div>
-
-    <!-- Export Buttons -->
-    <div class="section-heading">Export</div>
-    <div class="export-grid">
-      <button class="btn btn-primary btn-block" :disabled="exporting" @click="handleExportPDF">
-        {{ exporting ? '⏳ Generating…' : 'Export PDF ' + activePeriodLabel }}
-      </button>
-      <button class="btn btn-ghost btn-block" @click="showReceiptModal = true">
-         View Today's Receipt
-      </button>
+    <div class="section-label">Export</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:32px">
+      <button class="btn btn-primary btn-block" :disabled="exporting" @click="doExport">{{ exporting ? '⏳ Generating…' : '📄 Export PDF — ' + activePeriodLabel }}</button>
+      <button class="btn btn-ghost btn-block" @click="showReceipt = true">🧾 Today's Receipt</button>
     </div>
-
-    <!-- Receipt Modal -->
-    <BaseModal v-model="showReceiptModal" title="Today's Receipt">
+    <BaseModal v-model="showReceipt" title="Today's Receipt">
       <div class="receipt">
-        <div class="receipt-header">
-          <div class="receipt-logo">🥐 PerishTrack</div>
-          <div class="receipt-meta">{{ todayLabel() }}</div>
-          <div class="receipt-meta">Staff: {{ auth.currentUser?.name }}</div>
-        </div>
-        <div v-if="inv.todaySales.length === 0" style="text-align:center;padding:20px;color:var(--muted);font-size:13px">
-          No sales recorded today.
-        </div>
-        <div v-for="s in inv.todaySales" :key="s.id" class="receipt-line">
-          <span>{{ inv.productName(s.productId) }} × {{ s.qty }}</span>
-          <span>₱{{ (s.qty * s.price).toFixed(2) }}</span>
-        </div>
-        <div v-if="inv.todaySales.length > 0" class="receipt-total">
-          <span>TOTAL</span>
-          <span>₱{{ inv.todayRevenue.toFixed(2) }}</span>
-        </div>
+        <div class="receipt-header"><div class="receipt-logo">🥐 PerishTrack</div><div class="receipt-meta">{{ todayLabel() }}</div><div class="receipt-meta">{{ auth.currentUser?.name }}</div></div>
+        <div v-if="inv.todaySales.length === 0" style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No sales today.</div>
+        <div v-for="s in inv.todaySales" :key="s.id" class="receipt-line"><span>{{ inv.productName(s.productId) }} × {{ s.qty }}</span><span>₱{{ (s.qty*s.price).toFixed(2) }}</span></div>
+        <div v-if="inv.todaySales.length > 0" class="receipt-total"><span>Total</span><span>₱{{ inv.todayRevenue.toFixed(2) }}</span></div>
       </div>
-      <button class="btn btn-ghost btn-block" style="margin-top:14px" @click="showReceiptModal = false">
-        Close
-      </button>
+      <button class="btn btn-ghost btn-block" style="margin-top:14px" @click="showReceipt = false">Close</button>
     </BaseModal>
   </div>
 </template>
-
 <script setup>
 import { ref, computed } from 'vue'
 import { useInventoryStore } from '@/stores/inventory'
@@ -169,210 +57,27 @@ import { useAuthStore } from '@/stores/auth'
 import { useToastStore } from '@/stores/toast'
 import { todayLabel, today } from '@/utils/date'
 import { usePdf } from '@/composables/usePdf'
-import StatCard from '@/components/ui/StatCard.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
-
-const inv   = useInventoryStore()
-const auth  = useAuthStore()
-const toast = useToastStore()
+const inv = useInventoryStore(); const auth = useAuthStore(); const toast = useToastStore()
 const { exportReport } = usePdf()
-
-const period           = ref('daily')
-const productFilter    = ref('')
-const showReceiptModal = ref(false)
-const exporting        = ref(false)
-
-// Default selectedMonth to the current month in "YYYY-MM" format
-const currentYearMonth = today().slice(0, 7)
-const selectedMonth    = ref(currentYearMonth)
-
-const periods = [
-  { value: 'daily',   label: 'Today'     },
-  { value: 'weekly',  label: 'This Week' },
-  { value: 'monthly', label: 'Monthly'   },
-]
-
-
-const selectedMonthLabel = computed(() => {
-  if (!selectedMonth.value) return ''
-  const [yr, mo] = selectedMonth.value.split('-')
-  return new Date(parseInt(yr), parseInt(mo) - 1, 1)
-    .toLocaleDateString('en-PH', { month: 'long', year: 'numeric' })
-})
-
-// What we pass to getFilteredSales
-const activeTargetMonth = computed(() =>
-  period.value === 'monthly' ? selectedMonth.value : null
-)
-
-// Label shown in the banner & export button
-const activePeriodLabel = computed(() => {
-  if (period.value === 'daily')   return 'Today'
-  if (period.value === 'weekly')  return 'This Week'
-  if (period.value === 'monthly') return selectedMonthLabel.value
-  return ''
-})
-
-const filteredSales = computed(() =>
-  inv.getFilteredSales({
-    period:      period.value,
-    productId:   productFilter.value,
-    targetMonth: activeTargetMonth.value
-  })
-)
-
-const stats = computed(() => {
-  const revenue = filteredSales.value.reduce((s, x) => s + x.qty * x.price, 0)
-  const units   = filteredSales.value.reduce((s, x) => s + x.qty, 0)
-  const loss    = inv.totalLossValue
-  return { revenue, units, loss, net: revenue - loss }
-})
-
-const salesByProduct = computed(() =>
-  inv.getSalesByProduct(filteredSales.value)
-)
-
-async function handleExportPDF() {
-  exporting.value = true
-  try {
-    await exportReport(period.value, productFilter.value, activeTargetMonth.value)
-    toast.success(`PDF for ${activePeriodLabel.value} downloaded!`)
-  } catch (e) {
-    toast.error('Export failed. Please try again.')
-    console.error(e)
-  } finally {
-    exporting.value = false
-  }
-}
+const period = ref('daily'); const productFilter = ref(''); const showReceipt = ref(false); const exporting = ref(false)
+const currentYM = today().slice(0,7); const selectedMonth = ref(currentYM)
+const periods = [{ v:'daily', label:'Today' }, { v:'weekly', label:'This Week' }, { v:'monthly', label:'Monthly' }]
+const selectedMonthLabel = computed(() => { if (!selectedMonth.value) return ''; const [y,m] = selectedMonth.value.split('-'); return new Date(+y,+m-1,1).toLocaleDateString('en-PH',{month:'long',year:'numeric'}) })
+const activeTargetMonth = computed(() => period.value === 'monthly' ? selectedMonth.value : null)
+const activePeriodLabel = computed(() => { if (period.value==='daily') return 'Today'; if (period.value==='weekly') return 'This Week'; return selectedMonthLabel.value })
+const filtered = computed(() => inv.getFilteredSales({ period: period.value, productId: productFilter.value, targetMonth: activeTargetMonth.value }))
+const stats = computed(() => { const revenue = filtered.value.reduce((s,x) => s+x.qty*x.price,0); const units = filtered.value.reduce((s,x) => s+x.qty,0); const loss = inv.totalLossValue; return { revenue, units, loss, net: revenue-loss } })
+const byProduct = computed(() => inv.getSalesByProduct(filtered.value))
+async function doExport() { exporting.value=true; try { await exportReport(period.value, productFilter.value, activeTargetMonth.value); toast.success('PDF downloaded!') } catch { toast.error('Export failed.') } finally { exporting.value=false } }
 </script>
-
 <style scoped>
-/* Period Tabs */
-.period-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-.period-btn {
-  flex: 1;
-  padding: 10px 6px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  color: var(--muted);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all .18s;
-}
-.period-btn.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #0f0e0c;
-  font-weight: 700;
-}
-
-/* Month Picker */
-.month-picker-wrap {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-bottom: 14px;
-}
-.month-picker-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: var(--text2);
-}
-.month-display {
-  font-family: var(--font-head);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-
-/* Period Banner */
-.period-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xs);
-  padding: 9px 14px;
-  margin-bottom: 14px;
-  font-size: 13px;
-}
-.period-banner-icon { font-size: 15px; }
-.period-banner-text { flex: 1; color: var(--text2); }
-.period-banner-count {
-  font-family: var(--font-head);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-}
-
-/* Profit row */
-.profit-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px 16px;
-  margin-bottom: 16px;
-}
-.profit-label { font-size: 14px; color: var(--text2); }
-
-/* Chart */
-.chart-title {
-  font-family: var(--font-head);
-  font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.log-count { font-size: 12px; color: var(--muted); font-family: var(--font-body); font-weight: 400; }
-
-/* Sales Table */
-.log-header {
-  display: grid;
-  grid-template-columns: 90px 1fr 80px;
-  font-size: 10px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  padding: 6px 0;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 4px;
-}
-.log-row {
-  display: grid;
-  grid-template-columns: 90px 1fr 80px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 13px;
-  align-items: center;
-}
-.log-date    { color: var(--muted); font-size: 11px; }
-.log-product { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.log-amount  { font-family: var(--font-head); font-weight: 700; font-size: 13px; color: var(--accent); text-align: right; }
-
-/* Export */
-.export-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 32px;
-}
+.period-row { display: flex; gap: 6px; margin-bottom: 14px; }
+.period-btn { flex: 1; padding: 10px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-size: 13px; font-weight: 500; cursor: pointer; font-family: var(--font-body); transition: all .15s; }
+.period-btn.active { background: var(--accent); border-color: var(--accent); color: #0a0a09; font-weight: 700; }
+.month-picker { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 14px; }
+.month-picker-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.period-badge { display: flex; justify-content: space-between; align-items: center; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 9px 14px; margin-bottom: 14px; font-size: 13px; color: var(--text2); }
+.log-head { display: grid; grid-template-columns: 80px 1fr 80px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; padding: 6px 0; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.log-row { display: grid; grid-template-columns: 80px 1fr 80px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; align-items: center; gap: 8px; }
 </style>
