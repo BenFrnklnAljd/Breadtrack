@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="dash-header">
-      <div class="page-title">Good {{ greeting }}, {{ auth.currentUser?.name }} 👋</div>
+      <div class="page-title">Good {{ greeting }}, {{ auth.currentUser?.name }} </div>
       <div class="page-subtitle">{{ todayLabel() }}</div>
     </div>
     <div class="stats-grid">
