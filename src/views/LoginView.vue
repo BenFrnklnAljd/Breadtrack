@@ -2,7 +2,7 @@
   <div class="login-wrap">
 
     <div class="login-hero">
-      <div class="login-logo">🥐 PerishTrack</div>
+      <div class="login-logo"> PerishTrack</div>
       <div class="login-tagline">Inventory for perishable goods</div>
     </div>
 
