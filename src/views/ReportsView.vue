@@ -7,7 +7,7 @@
     </div>
     <Transition name="fade">
       <div v-if="period === 'monthly'" class="month-picker">
-        <div class="month-picker-top"><span style="font-size:13px;color:var(--text2)">📅 Select Month</span><span style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--accent)">{{ selectedMonthLabel }}</span></div>
+        <div class="month-picker-top"><span style="font-size:13px;color:var(--text2)"> Select Month</span><span style="font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--accent)">{{ selectedMonthLabel }}</span></div>
         <input class="field-input" type="month" v-model="selectedMonth" :max="currentYM" />
       </div>
     </Transition>
